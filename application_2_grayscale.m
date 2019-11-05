@@ -20,7 +20,7 @@ clear;
 close all;
 
 %Temps en secondes entre chaque image
-delai_affichage_image = 2;
+delai_affichage_image = 0.01;
 
 %On convertit l'image en nuances de gris (0 - 255) pour chaque pixel
 %On convertit la matrice en double (initialement uint8) pour pouvoir
@@ -31,17 +31,24 @@ I_INIT = rgb2gray(imread('img_bonus.jpg'));
 h = imshow(I_INIT);
 cd = get(h,'CData');
 
-for N=1:100
+%Décomposition en valeurs singulières
+[~, D, ~] = svd(double(I_INIT));
+%Nombre de valeurs singulières (!= 0)
+N = nnz(diag(D));
+
+for i=1:N
 %Décomposition en valeurs singulières
 [U, D, V] = svd(double(I_INIT));
 %On garde N valeurs singulières dans la matrice diagonale
-D(N:end, N:end) = 0;
+D(i:end, i:end) = 0;
 
 %On reconstruit l'image
 I = uint8(U * D * V');
 
+qualite = i / N;
+
 %Met à jour l'image
 set(h,'CData',I);
-title(sprintf("Image compressée en gardant %d valeurs singulières.", N));
+title(sprintf("Image compressée en gardant %d valeurs singulières sur %d. (Qualité=%.1f%%)", i, N, qualite * 100));
 pause(delai_affichage_image);
 end
