@@ -20,7 +20,7 @@ clear;
 close all;
 
 %Temps en secondes entre chaque image
-delai_affichage_image = 2;
+delai_affichage_image = 0.01;
 
 I_INIT = imread('img_bonus.jpg');
 
@@ -32,22 +32,30 @@ B = double(I_INIT(:,:,3));
 h = imshow(I_INIT);
 cd = get(h,'CData');
 
-for N=1:100
 %Décomposition en valeurs singulières 
-[U_R, S_R, V_R] = svd(R);
-[U_G, S_G, V_G] = svd(G);
-[U_B, S_B, V_B] = svd(B);
+[~, D_R, ~] = svd(R);
+
+N = nnz(diag(D_R));
+
+for i=1:N
+    
+%Décomposition en valeurs singulières 
+[U_R, D_R, V_R] = svd(R);
+[U_G, D_G, V_G] = svd(G);
+[U_B, D_B, V_B] = svd(B);
 
 %On garde N valeurs singulières dans la matrice diagonale
-S_R(N:end, N:end) = 0;
-S_G(N:end, N:end) = 0;
-S_B(N:end, N:end) = 0;
+D_R(i:end, i:end) = 0;
+D_G(i:end, i:end) = 0;
+D_B(i:end, i:end) = 0;
 
 %On reconstruit l'image en concaténant les différents channels R, G, B
-I = cat(3, uint8(U_R * S_R * V_R'), uint8(U_G * S_G * V_G'), uint8(U_B * S_B * V_B'));
+I = cat(3, uint8(U_R * D_R * V_R'), uint8(U_G * D_G * V_G'), uint8(U_B * D_B * V_B'));
+
+qualite = i / N;
 
 %Met à jour l'image
 set(h,'CData',I);
-title(sprintf("Image compressée en gardant %d valeurs singulières.", N));
+title(sprintf("Image compressée en gardant %d valeurs singulières sur %d. (Qualité=%.1f%%)", i, N, qualite * 100));
 pause(delai_affichage_image);
 end
